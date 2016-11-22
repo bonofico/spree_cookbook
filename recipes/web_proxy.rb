@@ -23,6 +23,10 @@ ruby_block "Add app domain to hosts file" do
   not_if { Resolv.getaddress(fqdn_domain) rescue false }
 end
 
+link '/etc/nginx/sites-enabled/default' do
+  action :delete
+end
+
 service 'nginx' do
   supports [:status, :restart]
   action :start

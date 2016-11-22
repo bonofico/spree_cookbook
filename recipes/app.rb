@@ -1,4 +1,4 @@
-include_recipe 'yum-epel'
+include_recipe 'yum-epel' if node['platform_family'] == 'rhel'
 
 group node['spree']['group'] do
   append true
@@ -19,7 +19,8 @@ directory node['spree']['root_path'] do
   recursive true
 end
 
-package %w(nodejs mysql-devel ImageMagick)  do
+package %w(nodejs ImageMagick)  do
+#package %w(nodejs mysql-devel ImageMagick)  do
   action :install
 end
 
@@ -38,7 +39,7 @@ rvm_shell "install rails" do
 end
 
 rvm_shell "New Spree App!" do
-  code %Q{rails _4.2.1_ new #{node['spree']['app']} --skip-bundle -d #{node['spree']['db_type']}}
+  code %Q{rails _#{node['spree']['rails']}_ new #{node['spree']['app']} --skip-bundle -d #{node['spree']['db_type']}}
   timeout 36000
   cwd node['spree']['root_path']
   user node['spree']['user']
@@ -56,13 +57,9 @@ execute "Add Spree to Rails app" do
   cwd node['spree']['app_path']
   command <<-EOF
     cat /tmp/Gemfile.tmp >> Gemfile
+
+    ### force mysql2 gem version
+    sed -i \"s/'mysql2'$/'mysql2', '0.3.21'/\" Gemfile
     EOF
   not_if "grep Chef-managed Gemfile"
-end
-
-template "#{node['spree']['app_path']}/config/database.yml" do
-  user  node['spree']['user']
-  group node['spree']['group']
-  source "database.yml.erb"
-  mode "0600"
 end

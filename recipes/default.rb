@@ -17,6 +17,12 @@
 # limitations under the License.
 #
 
+apt_update 'update apt cache' do
+  action :update
+end
+
+execute 'gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3'
+
 include_recipe 'spree::app'
 include_recipe 'spree::unicorn'
 include_recipe 'spree::database'
